@@ -4,32 +4,21 @@
 #include <string.h>
 
 // Structure for passing data to threads
-typedef struct {
+typedef struct Params{
 	int row;
 	int column;
 } params;
 
-
-int check[10] = {0};
-
 void * checkCols(void* parameters);
-void * checkRows(void* parameters);
+void * checkRows(void* parameters);	
 void * checkSub(void* parameters);
 int getSubGrid(int row, int col);
 void makeParams(int row, int col, params *data);
 void checkValidity(int c[]);
+void setToZero(int arr[]);
 
-int sud[9][9] = {
-	{1, 4, 2, 3, 6, 5, 7, 8, 9},
-	{6, 8, 7, 1, 4, 9, 2, 5, 3},
-	{5, 3, 9, 7, 8, 2, 6, 1, 4},
-	{4, 1, 3, 6, 7, 8, 5, 9, 2},
-	{8, 7, 5, 2, 9, 3, 1, 4, 6},
-	{2, 9, 6, 4, 5, 1, 3, 7, 8},
-	{9, 6, 1, 8, 2, 7, 4, 3, 5},
-	{7, 5, 4, 9, 3, 6, 8, 2, 1},
-	{3, 2, 8, 5, 1, 4, 9, 6, 7}
-};
+int sud[9][9] = {0};
+int check[10] = {0};
 
 /*
 check[0] = columns
@@ -39,6 +28,34 @@ check[3-10] = each subsquare
 
 int main(int argc, char const *argv[])
 {
+	char input,buffer[1];
+	int bufferIndex=0,x=0,y=0;
+
+	if (argc ==1) {
+		while (1) {
+			input = fgetc(stdin);
+			if(input==EOF){
+				break;
+			}
+			else if(input == ' '|| input=='\n'){
+				sud[x][y] = atoi(buffer);
+				if (y<8) {
+					y++;
+				} else {
+					y=0;
+					x++;
+				}
+				bzero(buffer, 1);
+				bufferIndex=0;
+				continue;
+			}
+			else {
+				buffer[bufferIndex]=input;
+				bufferIndex++;
+			}
+		}
+	}
+	
 	pthread_t colThread;
 	pthread_t rowThread;
 	pthread_t subThread0;
@@ -50,17 +67,17 @@ int main(int argc, char const *argv[])
 	pthread_t subThread6;
 	pthread_t subThread7;
 	pthread_t subThread8;
-	params *cols; 
-	params *rows;
-	params *sub0; 
-	params *sub1; 
-	params *sub2; 
-	params *sub3; 
-	params *sub4; 
-	params *sub5; 
-	params *sub6; 
-	params *sub7; 
-	params *sub8; 
+	params *cols = malloc(sizeof(params)); 
+	params *rows = malloc(sizeof(params));
+	params *sub0 = malloc(sizeof(params)); 
+	params *sub1 = malloc(sizeof(params)); 
+	params *sub2 = malloc(sizeof(params)); 
+	params *sub3 = malloc(sizeof(params)); 
+	params *sub4 = malloc(sizeof(params)); 
+	params *sub5 = malloc(sizeof(params)); 
+	params *sub6 = malloc(sizeof(params)); 
+	params *sub7 = malloc(sizeof(params)); 
+	params *sub8 = malloc(sizeof(params)); 
 	makeParams(0, 0, cols);
 	makeParams(0, 0, rows);
 	makeParams(0, 0, sub0);
@@ -83,30 +100,32 @@ int main(int argc, char const *argv[])
 	pthread_create(&subThread6, NULL, checkSub, (void *) sub6);
 	pthread_create(&subThread7, NULL, checkSub, (void *) sub7);
 	pthread_create(&subThread8, NULL, checkSub, (void *) sub8);
+
 	checkValidity(check);
 
 	return 0;
 }
 
+// Ensure each column in sudoku contains only 1-9
 void * checkCols(void* parameters) {
 	params *p = (params*) parameters;
 	int row = p->row;
 	int column = p->column;
-	int tempArr[9] = {0};
+	int* tempArr;
 	int cur = 0;
 
 	if (row < 0 || row > 9 || column < 0 || column > 9) {
 		printf("Invalid input at checkCols\n");
 		pthread_exit(NULL);
 	} else {
-		for (int i = row; i < 9; i++) {
-			memset(tempArr, 0, 9);
-			for (int j = column; j < 9; j++) {
+		for (int i = 0; i < 9; i++) {
+			tempArr = (int*)calloc(9, sizeof(int));
+			for (int j = 0; j < 9; j++) {
 				cur = sud[j][i];
-				if (cur < 1 || cur > 9 || tempArr[cur - 1] == 1) {
+				if (cur < 1 || cur > 9 || tempArr[cur] == 1) {
 					pthread_exit(NULL);
 				} else {
-					tempArr[cur-1] = 1;
+					tempArr[cur] = 1;
 				}
 			}
 		}
@@ -114,11 +133,12 @@ void * checkCols(void* parameters) {
 	}
 }
 
+// Ensure each row in sudoku contains only 1-9
 void * checkRows(void* parameters) {
 	params *p = (params*) parameters;
 	int row = p->row;
 	int column = p->column;
-	int tempArr[9] = {0};
+	int* tempArr;
 	int cur = 0;
 
 	if (row < 0 || row > 9 || column < 0 || column > 9) {
@@ -126,13 +146,13 @@ void * checkRows(void* parameters) {
 		pthread_exit(NULL);
 	} else {
 		for (int i = row; i < 9; i++) {
-			memset(tempArr, 0, 9);
+			tempArr = (int*)calloc(9, sizeof(int));
 			for (int j = column; j < 9; j++) {
 				cur = sud[j][i];
-				if (cur < 1 || cur > 9 || tempArr[cur - 1] == 1) {
+				if (cur < 1 || cur > 9 || tempArr[cur] == 1) {
 					pthread_exit(NULL);
 				} else {
-					tempArr[cur-1] = 1;
+					tempArr[cur] = 1;
 				}
 			}
 		}
@@ -140,6 +160,7 @@ void * checkRows(void* parameters) {
 	}
 }
 
+// Ensure each sub-grid contains only 1-9
 void * checkSub(void* parameters) {
 	params *p = (params*) parameters;
 	int row = p->row;
@@ -155,7 +176,7 @@ void * checkSub(void* parameters) {
 		for (int i = row; i < 9; i++) {
 			for (int j = 0; j < 9; j++) {
 				cur = sud[i][j];
-				if (sud[i][j] == 1) {
+				if (cur < 1 || cur > 9) {
 					pthread_exit(NULL);
 				} else {
 					tempArr[cur] = 1;	
@@ -166,6 +187,7 @@ void * checkSub(void* parameters) {
 	check[subGrid] = 1;
 }
 
+// Identify with sub-grid has been entered based on the row/column supplied
 int getSubGrid(int row, int col) {
 	if (row == 0) {
 		if (col == 0) {
@@ -178,7 +200,7 @@ int getSubGrid(int row, int col) {
 			return 4;
 		}
 	}
-	if (row = 3) {
+	if (row == 3) {
 		if (col == 0) {
 			return 5;
 		} 
@@ -189,7 +211,7 @@ int getSubGrid(int row, int col) {
 			return 7;
 		}
 	}
-	if (row = 6) {
+	if (row == 6) {
 		if (col == 0) {
 			return 8;
 		} 
@@ -202,15 +224,19 @@ int getSubGrid(int row, int col) {
 	}
 }
 
+// Constructor function for params struct
 void makeParams(int r, int col, params *data) {
 	data->row = r;
 	data->column = col;
 } 
 
+// Check global array for number of 0s
+// If the array contains more than 0 1s the solution is deemed incorrect
 void checkValidity(int c[]) {
 	int flag = 0;
 	for (int i = 0; i < 11; i++) {
 		if (check[i] != 1) {
+			wait(NULL); 
 			flag++;
 		} 
 	}
