@@ -11,12 +11,28 @@ void wating_room();
 void exam_room();
 
 int main(int argc, char const *argv[]) {
+	// mutexA
+	pthread_mutex_init(mutA, NULL);
+	// mutexB
+	pthread_mutex_init(mutB, NULL);
+	// semaphore
+	sem_init(sema, 0, 3);
+	// 5 patient pthreads
 	pthread_t p1;
 	pthread_t p2;
 	pthread_t p3;
 	pthread_t p4;
 	pthread_t p5;
+	// 1 doctor pthread
 	pthread_t doc;
+
+	pthread_create(&p1, NULL, cafeteria(), NULL);
+	pthread_create(&p2, NULL, cafeteria(), NULL);
+	pthread_create(&p3, NULL, cafeteria(), NULL);
+	pthread_create(&p4, NULL, cafeteria(), NULL);
+	pthread_create(&p5, NULL, cafeteria(), NULL);
+	
+
 
 	return 0;
 }
@@ -49,6 +65,10 @@ void wating_room() {
 void exam_room() {
 	sleep(thread p) // for a random amount of time
 	unlock B
+}
+
+void be_a_doctor() {
+	
 }
 
 
