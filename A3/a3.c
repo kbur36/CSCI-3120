@@ -4,24 +4,24 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/ipc.h>
-
+#include <string.h>
 
 sem_t sema;
-pthread_mutex_t mutA;
-pthread_mutex_t mutB;
+sem_t mutA;
+sem_t mutB;
 
 int rand_num();
-void *cafeteria();
-void *waiting_room();
-void *exam_room();
+void *cafeteria(char name[]);
+void *waiting_room(char name[]);
+void *exam_room(char name[]);
 
 int main(int argc, char const *argv[]) {
 	// mutexA
-	pthread_mutex_init(&mutA, NULL);
+	// pthread_mutex_init(&mutA, NULL);
 	// mutexB
-	pthread_mutex_init(&mutB, NULL);
+	sem_init(&mutB, 0, 1);
 	// semaphore
-	sem_init(&sema, 0, 3);
+	sem_init(&mutA, 0, 3);
 	// 5 patient pthreads
 	pthread_t p1;
 	pthread_t p2;
@@ -32,40 +32,42 @@ int main(int argc, char const *argv[]) {
 	// 1 doctor pthread
 	pthread_t doc;
 
-	pthread_create(&p1, NULL, (void *)cafeteria(), NULL);
-	pthread_create(&p2, NULL, (void *)cafeteria(), NULL);
-	pthread_create(&p3, NULL, (void *)cafeteria(), NULL);
-	pthread_create(&p4, NULL, (void *)cafeteria(), NULL);
-	pthread_create(&p5, NULL, (void *)cafeteria(), NULL);
+	pthread_create(&p1, NULL, (void *)cafeteria, " patient 1");
+	pthread_create(&p2, NULL, (void *)cafeteria, " patient 2");
+	pthread_create(&p3, NULL, (void *)cafeteria, " patient 3");
+	pthread_create(&p4, NULL, (void *)cafeteria, " patient 4");
+	pthread_create(&p5, NULL, (void *)cafeteria, " patient 5");
 	
 	return 0;
 }
 
-void *cafeteria() {
+void *cafeteria(char name[]) {
 	// update semaphore
-	printf("%s\n", );
+	printf("%s is drinkning coffee\n", name);
 	sem_post(&sema);
-	waiting_room();
+	waiting_room(name);
 
 }
 
-void *waiting_room() {
+void *waiting_room(char name[]) {
+	printf("%s is in the waiting room\n", name);
 	// Lock examination room
-	sem_wait(&sema);
+	sem_wait(&mutB);
 	// update semaphore
 	sem_post(&sema);
-	exam_room();
+	exam_room(name);
 }
 
-void *exam_room() {
+void *exam_room(char name[]) {
+	printf("%s has a finger in his butt\n", name);
 	// Sleep for a random amount of time
 	sleep(rand_num()); 
 	// unlock B
-	sem_post(&sema);
+	sem_post(&mutB);
 }
 
 int rand_num() {
-	int r = rand() % 20;
+	int r = rand() % 5;
 	return r;
 }
 
